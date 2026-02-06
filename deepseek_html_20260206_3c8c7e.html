@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ລະບົບຈັດການລາຍງານການຜະລິດ</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-bg: #f8f9fa;
+            --border-color: #ddd;
+            --glass-color: #d1ecf1;
+            --bag-color: #d4edda;
+            --box-color: #fff3cd;
+            --jar-color: #f8d7da;
+        }
+
+        body {
+            font-family: 'Noto Sans Lao', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color), #4a6491);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+        }
+
+        .app-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .app-header p {
+            margin: 5px 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            min-height: 800px;
+        }
+
+        /* Sidebar - Input Form */
+        .sidebar {
+            width: 350px;
+            background: var(--light-bg);
+            padding: 25px;
+            border-right: 2px solid var(--border-color);
+        }
+
+        .sidebar h2 {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Noto Sans Lao', sans-serif;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Noto Sans Lao', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, var(--accent-color), #c0392b);
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 18px;
+            padding: 15px;
+        }
+
+        .month-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .month-btn {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .month-btn:hover {
+            border-color: var(--secondary-color);
+            background: #e8f4fc;
+        }
+
+        .month-btn.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        /* Main Panel - Data Display */
+        .main-panel {
+            flex: 1;
+            padding: 25px;
+            background: white;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 24px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .data-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            border-top: 5px solid var(--secondary-color);
+        }
+
+        .summary-card.total {
+            border-top-color: var(--accent-color);
+        }
+
+        .summary-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--primary-color);
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Data Table */
+        .data-table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, var(--primary-color), #34495e);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #e8f4fc;
+            color: var(--secondary-color);
+        }
+
+        .btn-edit:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background: #fdeaea;
+            color: var(--accent-color);
+        }
+
+        .btn-delete:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* Color coding for product types */
+        .type-glass { border-left: 4px solid #17a2b8; }
+        .type-bag { border-left: 4px solid #28a745; }
+        .type-box { border-left: 4px solid #ffc107; }
+        .type-jar { border-left: 4px solid #dc3545; }
+
+        /* A4 Preview */
+        .a4-preview-container {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            position: relative;
+            display: none; /* Hidden by default, shown when needed */
+        }
+
+        .preview-active .a4-preview-container {
+            display: block;
+        }
+
+        .preview-active .main-panel {
+            display: none;
+        }
+
+        /* Report Header in Preview */
+        .report-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .report-header h1 {
+            color: var(--primary-color);
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* Preview Controls */
+        .preview-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid var(--border-color);
+            }
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .a4-preview-container, .a4-preview-container * {
+                visibility: visible;
+            }
+            
+            .a4-preview-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- App Header -->
+        <div class="app-header">
+            <h1><i class="fas fa-chart-line"></i> ລະບົບຈັດການລາຍງານການຜະລິດ</h1>
+            <p>ເພີ່ມ ແກ້ໄຂ ແລະ ສ້າງລາຍງານການຜະລິດທຸກເດືອນ</p>
+            <p>ສະບັບວັນທີ: 5 ກຸມພາ 2026</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Sidebar - Input Form -->
+            <div class="sidebar">
+                <h2><i class="fas fa-plus-circle"></i> ເພີ່ມຂໍ້ມູນການຜະລິດ</h2>
+                
+                <div class="month-selector">
+                    <div class="month-btn active" onclick="selectMonth(1)">ເດືອນ 1</div>
+                    <div class="month-btn" onclick="selectMonth(2)">ເດືອນ 2</div>
+                    <div class="month-btn" onclick="selectMonth(3)">ເດືອນ 3</div>
+                    <div class="month-btn" onclick="selectMonth(4)">ເດືອນ 4</div>
+                    <div class="month-btn" onclick="selectMonth(5)">ເດືອນ 5</div>
+                    <div class="month-btn" onclick="selectMonth(6)">ເດືອນ 6</div>
+                    <div class="month-btn" onclick="selectMonth(7)">ເດືອນ 7</div>
+                    <div class="month-btn" onclick="selectMonth(8)">ເດືອນ 8</div>
+                    <div class="month-btn" onclick="selectMonth(9)">ເດືອນ 9</div>
+                    <div class="month-btn" onclick="selectMonth(10)">ເດືອນ 10</div>
+                    <div class="month-btn" onclick="selectMonth(11)">ເດືອນ 11</div>
+                    <div class="month-btn" onclick="selectMonth(12)">ເດືອນ 12</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="productName">ຊື່ສິນຄ້າ</label>
+                    <input type="text" id="productName" class="form-control" placeholder="ຕົວຢ່າງ: ແຈ້ວປາປິນ">
+                </div>
+
+                <div class="form-group">
+                    <label for="productWeight">ນໍ້າໜັກ (g)</label>
+                    <input type="number" id="productWeight" class="form-control" placeholder="ຕົວຢ່າງ: 60">
+                </div>
+
+                <div class="form-group">
+                    <label for="productionDate">ວັນທີຜະລິດ</label>
+                    <input type="date" id="productionDate" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="productType">ປະເພດເຄື່ອງ</label>
+                    <select id="productType" class="form-control">
+                        <option value="ແກ້ວ">ແກ້ວ</option>
+                        <option value="ກະປຸກ">ກະປຸກ</option>
+                        <option value="ຊອງ">ຊອງ</option>
+                        <option value="ຕຸກ">ຕຸກ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">ຈຳນວນ (ໜ່ວຍ)</label>
+                    <input type="number" id="quantity" class="form-control" placeholder="ຕົວຢ່າງ: 100">
+                </div>
+
+                <div class="form-group">
+                    <input type="hidden" id="editIndex" value="-1">
+                    <button class="btn btn-primary" onclick="addOrUpdateProduct()" style="width: 100%;">
+                        <i class="fas fa-save"></i> ບັນທຶກຂໍ້ມູນ
+                    </button>
+                </div>
+
+                <button class="btn btn-pdf" onclick="generatePDF()">
+                    <i class="fas fa-file-pdf"></i> ສ້າງລາຍງານ PDF
+                </button>
+            </div>
+
+            <!-- Main Panel - Data Display -->
+            <div class="main-panel" id="mainPanel">
+                <div class="panel-header">
+                    <h2 class="panel-title" id="currentMonthTitle">
+                        <i class="fas fa-boxes"></i> ຂໍ້ມູນການຜະລິດເດືອນ 1
+                    </h2>
+                    <div>
+                        <button class="btn btn-success" onclick="showPreview()">
+                            <i class="fas fa-eye"></i> ເບິ່ງຕົວຢ່າງລາຍງານ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Summary -->
+                <div class="data-summary" id="dataSummary">
+                    <!-- Summary cards will be inserted here by JavaScript -->
+                </div>
+
+                <!-- Data Table -->
+                <div class="data-table-container">
+                    <div class="table-header">
+                        <h3><i class="fas fa-table"></i> ລາຍການຜະລິດ</h3>
+                        <span id="totalProducts">ລວມ 0 ລາຍການ</span>
+                    </div>
+                    <table id="productionTable">
+                        <thead>
+                            <tr>
+                                <th width="50">ລຳດັບ</th>
+                                <th>ລາຍການຜະລິດ</th>
+                                <th width="120">ນໍ້າໜັກ</th>
+                                <th width="120">ວັນທີ</th>
+                                <th width="100">ປະເພດ</th>
+                                <th width="100">ຈຳນວນ</th>
+                                <th width="100">ການຈັດການ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- A4 Preview (Hidden by default) -->
+            <div class="a4-preview-container" id="previewContainer">
+                <div class="report-header">
+                    <h1>ລາຍງານການຜະລິດ</h1>
+                    <p>ບໍລິສັດ ຜະລິດອາຫານລາວ</p>
+                    <p id="previewReportNumber">ເລກທີ: RPT/PRD/2026/001</p>
+                    <p id="previewDate">ສະບັບພິມວັນທີ: 5 ກຸມພາ 2026</p>
+                </div>
+
+                <div id="previewContent">
+                    <!-- Preview content will be generated by JavaScript -->
+                </div>
+
+                <div class="preview-controls">
+                    <button class="btn btn-danger" onclick="hidePreview()">
+                        <i class="fas fa-arrow-left"></i> ກັບໄປຈັດການຂໍ້ມູນ
+                    </button>
+                    <button class="btn btn-success" onclick="downloadPDF()">
+                        <i class="fas fa-download"></i> ດາວໂຫລດ PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลตัวอย่าง (Sample Data)
+        let productionData = {
+            1: [ // ข้อมูลเดือน 1
+                {id: 1, name: "ແຈ້ວປາປິນ", weight: "60 g", date: "1/5/2026", type: "ແກ້ວ", quantity: 77},
+                {id: 2, name: "ແຈ້ວປິ່ງຈີນ", weight: "120 g", date: "1/6/2026", type: "ກະປຸກ", quantity: 688},
+                {id: 3, name: "ແຈ້ວບອງຊອງ", weight: "100 g", date: "19/01/26", type: "ຊອງ", quantity: 400},
+                {id: 4, name: "ແຈ້ວບອງແກ້ວ", weight: "323 g", date: "20/01/26", type: "ແກ້ວ", quantity: 313},
+                {id: 5, name: "ຜົງປິ່ງຈີນ", weight: "130 g", date: "20/01/26", type: "ກະປຸກ", quantity: 694},
+                {id: 6, name: "ຜົງຫມາກກ້ວຍ", weight: "100 g", date: "20/01/26", type: "ແກ້ວ", quantity: 176},
+                {id: 7, name: "ຂີ້ຫມິ້ນ", weight: "50 g", date: "22/01/26", type: "ແກ້ວ", quantity: 564},
+                {id: 8, name: "ຜົງປິ່ງຈີນ", weight: "180 g", date: "27/01/26", type: "ຕຸກ", quantity: 553},
+                {id: 9, name: "ພິກໄທດໍາບົດ", weight: "70 g", date: "28/01/26", type: "ແກ້ວ", quantity: 541},
+                {id: 10, name: "ແຈ້ວຫມາກແຄ່ນ", weight: "180 g", date: "30/01/26", type: "ແກ້ວ", quantity: 401}
+            ],
+            2: [], // ข้อมูลเดือน 2 (ว่าง)
+            3: [], // ข้อมูลเดือน 3 (ว่าง)
+            4: [], // ข้อมูลเดือน 4 (ว่าง)
+            5: [], // ข้อมูลเดือน 5 (ว่าง)
+            6: [], // ข้อมูลเดือน 6 (ว่าง)
+            7: [], // ข้อมูลเดือน 7 (ว่าง)
+            8: [], // ข้อมูลเดือน 8 (ว่าง)
+            9: [], // ข้อมูลเดือน 9 (ว่าง)
+            10: [], // ข้อมูลเดือน 10 (ว่าง)
+            11: [], // ข้อมูลเดือน 11 (ว่าง)
+            12: [] // ข้อมูลเดือน 12 (ว่าง)
+        };
+
+        let currentMonth = 1;
+        let editIndex = -1;
+
+        // ฟังก์ชันเลือกเดือน
+        function selectMonth(month) {
+            currentMonth = month;
+            
+            // อัปเดตปุ่มเดือน
+            document.querySelectorAll('.month-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // อัปเดตหัวข้อ
+            document.getElementById('currentMonthTitle').innerHTML = 
+                `<i class="fas fa-boxes"></i> ຂໍ້ມູນການຜະລິດເດືອນ ${month}`;
+            
+            // โหลดข้อมูลเดือนที่เลือก
+            loadMonthData();
+        }
+
+        // โหลดข้อมูลเดือน
+        function loadMonthData() {
+            const monthData = productionData[currentMonth];
+            const tableBody = document.getElementById('tableBody');
+            const totalProducts = document.getElementById('totalProducts');
+            
+            // เคลียร์ตารางเก่า
+            tableBody.innerHTML = '';
+            
+            // กรณีไม่มีข้อมูล
+            if (!monthData || monthData.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                            <p style="color: #999;">ຍັງບໍ່ມີຂໍ້ມູນການຜະລິດເດືອນ ${currentMonth}</p>
+                            <p style="color: #999; font-size: 14px;">ກະລຸນາເພີ່ມຂໍ້ມູນໃໝ່</p>
+                        </td>
+                    </tr>
+                `;
+                totalProducts.textContent = 'ລວມ 0 ລາຍການ';
+                updateSummaryCards(0, 0);
+                return;
+            }
+            
+            // เพิ่มข้อมูลลงตาราง
+            let totalQuantity = 0;
+            monthData.forEach((item, index) => {
+                totalQuantity += item.quantity;
+                
+                // กำหนด class ตามประเภท
+                let typeClass = '';
+                switch(item.type) {
+                    case 'ແກ້ວ': typeClass = 'type-glass'; break;
+                    case 'ກະປຸກ': typeClass = 'type-bag'; break;
+                    case 'ຊອງ': typeClass = 'type-box'; break;
+                    case 'ຕຸກ': typeClass = 'type-jar'; break;
+                }
+                
+                const row = `
+                    <tr class="fade-in ${typeClass}">
+                        <td>${index + 1}</td>
+                        <td>${item.name}</td>
+                        <td>${item.weight}</td>
+                        <td>${item.date}</td>
+                        <td>${item.type}</td>
+                        <td>${item.quantity.toLocaleString()}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <div class="btn-icon btn-edit" onclick="editProduct(${index})">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="btn-icon btn-delete" onclick="deleteProduct(${index})">
+                                    <i class="fas fa-trash"></i>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            
+            // อัปเดตสรุป
+            totalProducts.textContent = `ລວມ ${monthData.length} ລາຍການ`;
+            updateSummaryCards(monthData.length, totalQuantity);
+        }
+
+        // อัปเดตการ์ดสรุป
+        function updateSummaryCards(totalItems, totalQuantity) {
+            const summaryContainer = document.getElementById('dataSummary');
+            
+            summaryContainer.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-label">ຈຳນວນລາຍການ</div>
+                    <div class="summary-value">${totalItems}</div>
+                    <div class="summary-label">ລາຍການ</div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-label">ຍອດຜະລິດລວມ</div>
+                    <div class="summary-value">${totalQuantity.toLocaleString()}</div>
+                    <div class="summary-label">ໜ່ວຍ</div>
+                </div>
+                
+                <div class="summary-card total">
+                    <div class="summary-label">ສະເລ່ຍຕໍ່ລາຍການ</div>
+                    <div class="summary-value">${totalItems > 0 ? Math.round(totalQuantity / totalItems) : 0}</div>
+                    <div class="summary-label">ໜ່ວຍ/ລາຍການ</div>
+                </div>
+            `;
+        }
+
+        // เพิ่มหรือแก้ไขสินค้า
+        function addOrUpdateProduct() {
+            const name = document.getElementById('productName').value;
+            const weight = document.getElementById('productWeight').value;
+            const date = document.getElementById('productionDate').value;
+            const type = document.getElementById('productType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const editIdx = parseInt(document.getElementById('editIndex').value);
+            
+            // ตรวจสอบข้อมูล
+            if (!name || !weight || !date || !quantity) {
+                alert('ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ');
+                return;
+            }
+            
+            // จัดรูปแบบวันที่
+            const formattedDate = formatDate(date);
+            
+            // สร้างอ็อบเจ็กต์สินค้า
+            const product = {
+                id: Date.now(), // ใช้ timestamp เป็น ID
+                name: name,
+                weight: weight + ' g',
+                date: formattedDate,
+                type: type,
+                quantity: quantity
+            };
+            
+            // ตรวจสอบว่ามีข้อมูลเดือนนี้หรือไม่
+            if (!productionData[currentMonth]) {
+                productionData[currentMonth] = [];
+            }
+            
+            if (editIdx >= 0) {
+                // แก้ไขข้อมูลที่มีอยู่
+                productionData[currentMonth][editIdx] = product;
+            } else {
+                // เพิ่มข้อมูลใหม่
+                productionData[currentMonth].push(product);
+            }
+            
+            // รีเซ็ตฟอร์ม
+            resetForm();
+            
+            // โหลดข้อมูลใหม่
+            loadMonthData();
+            
+            // แสดงข้อความยืนยัน
+            alert(editIdx >= 0 ? 'ແກ້ໄຂຂໍ້ມູນສຳເລັດ!' : 'ເພີ່ມຂໍ້ມູນສຳເລັດ!');
+        }
+
+        // แก้ไขสินค้า
+        function editProduct(index) {
+            const product = productionData[currentMonth][index];
+            
+            // เติมข้อมูลลงฟอร์ม
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productWeight').value = parseInt(product.weight);
+            document.getElementById('productionDate').value = reverseFormatDate(product.date);
+            document.getElementById('productType').value = product.type;
+            document.getElementById('quantity').value = product.quantity;
+            document.getElementById('editIndex').value = index;
+            
+            // เลื่อนไปที่ฟอร์ม
+            document.getElementById('productName').focus();
+        }
+
+        // ลบสินค้า
+        function deleteProduct(index) {
+            if (confirm('ທ່ານແນ່ໃຈທີ່ຈະລຶບຂໍ້ມູນນີ້?')) {
+                productionData[currentMonth].splice(index, 1);
+                loadMonthData();
+                alert('ລຶບຂໍ້ມູນສຳເລັດ!');
+            }
+        }
+
+        // รีเซ็ตฟอร์ม
+        function resetForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productWeight').value = '';
+            document.getElementById('productionDate').value = '';
+            document.getElementById('productType').value = 'ແກ້ວ';
+            document.getElementById('quantity').value = '';
+            document.getElementById('editIndex').value = '-1';
+        }
+
+        // จัดรูปแบบวันที่
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear().toString().slice(-2)}`;
+        }
+
+        // ย้อนกลับรูปแบบวันที่
+        function reverseFormatDate(formattedDate) {
+            const parts = formattedDate.split('/');
+            const year = parseInt(parts[2]) < 50 ? 2000 + parseInt(parts[2]) : 1900 + parseInt(parts[2]);
+            return `${year}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+
+        // แสดงตัวอย่างรายงาน
+        function showPreview() {
+            document.querySelector('.main-content').classList.add('preview-active');
+            generatePreview();
+        }
+
+        // ซ่อนตัวอย่างรายงาน
+        function hidePreview() {
+            document.querySelector('.main-content').classList.remove('preview-active');
+        }
+
+        // สร้างตัวอย่างรายงาน
+        function generatePreview() {
+            const previewContent = document.getElementById('previewContent');
+            const monthData = productionData[currentMonth];
+            const currentDate = new Date();
+            
+            // อัปเดตข้อมูลรายงาน
+            document.getElementById('previewReportNumber').textContent = 
+                `ເລກທີ: RPT/PRD/2026/${currentMonth.toString().padStart(3, '0')}`;
+            document.getElementById('previewDate').textContent = 
+                `ສະບັບພິມວັນທີ: ${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+            
+            // กรณีไม่มีข้อมูล
+            if (!monthData || monthData.length === 0) {
+                previewContent.innerHTML = `
+                    <div style="text-align: center; padding: 100px 0;">
+                        <h3>ບໍ່ມີຂໍ້ມູນການຜະລິດເດືອນ ${currentMonth}</h3>
+                        <p>ກະລຸນາເພີ່ມຂໍ້ມູນການຜະລິດກ່ອນສ້າງລາຍງານ</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // คำนวณยอดรวม
+            let totalQuantity = 0;
+            monthData.forEach(item => {
+                totalQuantity += item.quantity;
+            });
+            
+            // สร้างตารางในตัวอย่าง
+            let tableHTML = `
+                <div style="margin-bottom: 40px;">
+                    <h2 style="color: #2c3e50; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        ການຜະລິດເດືອນ ${currentMonth} (${getMonthName(currentMonth)} 2026)
+                        <span style="float: right; font-size: 16px;">ລວມ: ${totalQuantity.toLocaleString()} ໜ່ວຍ</span>
+                    </h2>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background: #34495e; color: white;">
+                                <th style="padding: 15px 10px; text-align: center;">ລຳດັບ</th>
+                                <th style="padding: 15px 10px; text-align: left;">ລາຍການຜະລິດ</th>
+                                <th style="padding: 15px 10px; text-align: center;">ນໍ້າໜັກ</th>
+                                <th style="padding: 15px 10px; text-align: center;">ວັນທີ</th>
+                                <th style="padding: 15px 10px; text-align: center;">ປະເພດ</th>
+                                <th style="padding: 15px 10px; text-align: center;">ຈຳນວນ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            monthData.forEach((item, index) => {
+                // กำหนดสีพื้นหลังตามประเภท
+                let bgColor = '#ffffff';
+                switch(item.type) {
+                    case 'ແກ້ວ': bgColor = '#d1ecf1'; break;
+                    case 'ກະປຸກ': bgColor = '#d4edda'; break;
+                    case 'ຊອງ': bgColor = '#fff3cd'; break;
+                    case 'ຕຸກ': bgColor = '#f8d7da'; break;
+                }
+                
+                tableHTML += `
+                    <tr style="border-bottom: 1px solid #ddd; background-color: ${bgColor};">
+                        <td style="padding: 12px 10px; text-align: center; border-right: 1px solid #ddd;">${index + 1}</td>
+                        <td style="padding: 12px 10px; border-right: 1px solid #ddd;">${item.name}</td>
+                        <td style="padding: 12px 10px; text-align: center; border-right: 1px solid #ddd;">${item.weight}</td>
+                        <td style="padding: 12px 10px; text-align: center; border-right: 1px solid #ddd;">${item.date}</td>
+                        <td style="padding: 12px 10px; text-align: center; border-right: 1px solid #ddd;">${item.type}</td>
+                        <td style="padding: 12px 10px; text-align: center;">${item.quantity.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #2c3e50, #4a6491); color: white; padding: 25px; border-radius: 10px; margin-top: 40px;">
+                    <h2 style="text-align: center; margin-bottom: 20px;">ສະຫຼຸບການຜະລິດ</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div>ລວມທັງໝົດ</div>
+                            <div style="font-size: 28px; font-weight: bold; margin: 10px 0; color: #f1c40f;">${totalQuantity.toLocaleString()}</div>
+                            <div>ໜ່ວຍ</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div>ຈຳນວນລາຍການ</div>
+                            <div style="font-size: 28px; font-weight: bold; margin: 10px 0; color: #f1c40f;">${monthData.length}</div>
+                            <div>ລາຍການ</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div>ສະເລ່ຍຕໍ່ລາຍການ</div>
+                            <div style="font-size: 28px; font-weight: bold; margin: 10px 0; color: #f1c40f;">${Math.round(totalQuantity / monthData.length)}</div>
+                            <div>ໜ່ວຍ/ລາຍການ</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; text-align: center; font-size: 14px;">
+                    <p>ລາຍງານນີ້ຖືກສ້າງຂຶ້ນໂດຍລະບົບຈັດການການຜະລິດ</p>
+                    <p>ສຳນັກງານ: ບ້ານຈອມເມືອງ, ເມືອງຫຼວງພະບາງ, ສປປ ລາວ</p>
+                    <p>ເບີຕິດຕໍ່: 020 1234 5678 | ອີເມວ: info@laofood.la</p>
+                </div>
+            `;
+            
+            previewContent.innerHTML = tableHTML;
+        }
+
+        // ดาวน์โหลด PDF
+        function downloadPDF() {
+            const element = document.getElementById('previewContainer');
+            const currentDate = new Date();
+            const filename = `ລາຍງານການຜະລິດ_ເດືອນ${currentMonth}_${currentDate.getFullYear()}.pdf`;
+            
+            const opt = {
+                margin:       [15, 15, 15, 15],
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                },
+                jsPDF:        { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait',
+                    compress: true
+                }
+            };
+
+            // แสดงข้อความกำลังสร้าง
+            alert('ກຳລັງສ້າງ PDF... ກະລຸນາລໍຖ້າ');
+            
+            // สร้าง PDF
+            html2pdf().set(opt).from(element).save().then(() => {
+                alert('✅ PDF ຖືກສ້າງສຳເລັດ ແລະ ດາວໂຫລດແລ້ວ!');
+            });
+        }
+
+        // ฟังก์ชัน generatePDF สำหรับปุ่มใน sidebar
+        function generatePDF() {
+            showPreview();
+            setTimeout(() => {
+                downloadPDF();
+            }, 1000);
+        }
+
+        // ชื่อเดือน
+        function getMonthName(month) {
+            const monthNames = [
+                '', 'ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 
+                'ມິຖຸນາ', 'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 
+                'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'
+            ];
+            return monthNames[month];
+        }
+
+        // โหลดข้อมูลเมื่อเริ่มต้น
+        window.onload = function() {
+            loadMonthData();
+            
+            // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('productionDate').value = today;
+        };
+    </script>
+</body>
+</html>

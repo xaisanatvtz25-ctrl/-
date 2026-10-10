@@ -1,0 +1,19 @@
+{
+  "name": "milako-production-summary",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Production summary website of Milako Import-Export Sole Co., Ltd. (locked: 6 people, encrypted data).",
+  "scripts": {
+    "build": "bash build.sh",
+    "vault": "esbuild tools/vault-cli.ts --bundle --platform=node --format=esm --target=node20 --outfile=tools/vault-cli.mjs && node tools/vault-cli.mjs"
+  },
+  "dependencies": {
+    "html-to-image": "1.11.13",
+    "pdf-lib": "1.17.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

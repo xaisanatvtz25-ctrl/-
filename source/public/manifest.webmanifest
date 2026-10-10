@@ -1,0 +1,16 @@
+{
+  "name": "ມິລະໂກະ · ສະຫຼຸບຜົນການຜະລິດ",
+  "short_name": "ມິລະໂກະ",
+  "description": "ລະບົບສະຫຼຸບຜົນການຜະລິດ ບໍລິສັດ ມິລະໂກະ ການຄ້າຂາເຂົ້າ-ຂາອອກ ຈຳກັດຜູ້ດຽວ",
+  "lang": "lo",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f7fb",
+  "theme_color": "#0f3d6a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

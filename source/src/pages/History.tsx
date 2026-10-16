@@ -12,6 +12,7 @@ import { errorCode } from '../lib/api';
 import { fmt, longDate, parseYm } from '../lib/format';
 import type { EntrySnap, HistAct, HistRecord, UserSnap } from '../lib/history';
 import type { Product } from '../lib/types';
+import { dutyOfRecord } from '../lib/roles';
 
 type Filter = 'all' | HistAct | 'stock';
 const PAGE = 60;
@@ -43,7 +44,7 @@ const STOCK_ACTS: HistAct[] = ['receive', 'unreceive', 'flag', 'unflag'];
 export function History() {
     const { t, monthName } = useI18n();
     const { loadHistory, undo, historyVersion } = useStore();
-    const { canEdit } = useEditor();
+    const { can } = useEditor();
     const toast = useToast();
     const [records, setRecords] = useState<HistRecord[] | null>(null);
     const [failed, setFailed] = useState(false);
@@ -267,7 +268,8 @@ export function History() {
                             <ul className="hist-list">
                                 {g.items.map((r) => {
                                     const d = describe(r);
-                                    const canUndo = canEdit && !r.undoneAt && r.act !== 'undo' && r.act !== 'password';
+                                    const duty = dutyOfRecord(r);
+                                    const canUndo = Boolean(duty && can(duty)) && !r.undoneAt;
                                     return (
                                         <li key={r.id} className={`hist-item act-${r.act}${r.undoneAt ? ' is-undone' : ''}`}>
                                             <span className="hist-icon" aria-hidden="true">

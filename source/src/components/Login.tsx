@@ -34,6 +34,7 @@ function loginErrorText(t: (k: Key, v?: Record<string, string | number>) => stri
         no_write: 'errNoMaster',
         rate_limited: 'errRate',
         conflict: 'errBusy',
+        not_allowed: 'errNotAllowed',
     };
     return t(map[code] || (code === 'network_error' || code === 'timeout' || /^http_/.test(code) ? 'lgLoadError' : 'errorGeneric'));
 }

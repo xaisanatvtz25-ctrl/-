@@ -50,7 +50,9 @@ interface Props {
 export function Stock({ ym, navigate }: Props) {
     const { t, monthName } = useI18n();
     const { products, months, chat, setReceived, clearIssue } = useStore();
-    const { canEdit, requireLogin } = useEditor();
+    const { can, may, requireLogin } = useEditor();
+    const canEdit = can('check');
+    const mayCheck = may('check');
     const toast = useToast();
     const [view, setView] = useState<View>('all');
     const [day, setDay] = useState('');
@@ -141,6 +143,9 @@ export function Stock({ ym, navigate }: Props) {
         });
 
     const toggle = (e: Entry) => {
+        if (!mayCheck) {
+            return;
+        }
         requireLogin(() => {
             if (e.received) {
                 setUntick(e);
@@ -153,6 +158,9 @@ export function Stock({ ym, navigate }: Props) {
     };
 
     const markIssue = (e: Entry) => {
+        if (!mayCheck) {
+            return;
+        }
         requireLogin(() => setIssueFor({ entry: e, month: ym, name: nameOf.get(e.productId) || '—' }));
     };
 
@@ -317,7 +325,7 @@ export function Stock({ ym, navigate }: Props) {
                                                     aria-checked={Boolean(e.received)}
                                                     aria-label={`${e.received ? t('stockUnmark') : t('stockMark')}: ${name} ${fmt(e.qty)}`}
                                                     className="stock-check"
-                                                    disabled={isBusy}
+                                                    disabled={isBusy || !mayCheck}
                                                     onClick={() => toggle(e)}
                                                 >
                                                     {isBusy ? (
@@ -375,7 +383,7 @@ export function Stock({ ym, navigate }: Props) {
                                                 </div>
                                                 <div className="stock-side">
                                                     <span className="stock-qty num">{fmt(e.qty)}</span>
-                                                    {!e.received && !e.issue && (
+                                                    {mayCheck && !e.received && !e.issue && (
                                                         <button
                                                             type="button"
                                                             className="stock-flag"

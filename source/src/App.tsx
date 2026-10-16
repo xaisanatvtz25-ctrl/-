@@ -27,6 +27,8 @@ import { LogoMark } from './components/Logo';
 import { LangSwitch } from './components/LangSwitch';
 import { SoundToggle } from './components/SoundToggle';
 import { AiChat } from './components/AiChat';
+import { ROLE_LABEL } from './components/EditAccess';
+import { writes } from './lib/roles';
 import { EntryModal } from './components/EntryModal';
 import type { EntryModalState } from './components/EntryModal';
 import { ProductModal } from './components/ProductModal';
@@ -76,7 +78,7 @@ function UserButton({ onAction }: { onAction?: () => void }) {
             </span>
             <span className="side-user-text">
                 <strong>{session.name}</strong>
-                <small>{t('acOpen')}</small>
+                <small className={`side-user-role is-${session.role}`}>{t(ROLE_LABEL[session.role])}</small>
             </span>
             <Icon name="chevronRight" size={16} />
         </button>
@@ -95,6 +97,9 @@ function EditButton({ variant, onAction }: { variant: 'side' | 'top'; onAction?:
         onAction?.();
         editor.requireLogin();
     };
+    if (!writes(editor.role)) {
+        return null; // looks only: nothing to unlock
+    }
     if (editor.canEdit) {
         return variant === 'side' ? (
             <button type="button" className="side-edit is-on" onClick={openAccount}>
@@ -397,10 +402,28 @@ function Shell() {
         }
     }
 
-    // adding or changing data asks for a login first (viewing never does)
-    const { requireLogin } = editor;
-    const openEntry = useCallback((s: EntryModalState) => requireLogin(() => setEntryState(s)), [requireLogin]);
-    const openProduct = useCallback((s: ProductModalState) => requireLogin(() => setProductState(s)), [requireLogin]);
+    // adding or changing data asks for a login first (viewing never does), and only for the person's own duties
+    const { requireLogin, may } = editor;
+    const openEntry = useCallback(
+        (s: EntryModalState) => {
+            if (may('record')) {
+                requireLogin(() => setEntryState(s));
+            } else {
+                toast.show(t('errNotAllowed'), 'error', 'lock');
+            }
+        },
+        [requireLogin, may, toast, t],
+    );
+    const openProduct = useCallback(
+        (s: ProductModalState) => {
+            if (may('products')) {
+                requireLogin(() => setProductState(s));
+            } else {
+                toast.show(t('errNotAllowed'), 'error', 'lock');
+            }
+        },
+        [requireLogin, may, toast, t],
+    );
     const closeAi = useCallback(() => setAiOpen(false), []);
 
     let content;

@@ -25,8 +25,10 @@ export interface Dataset {
  * 2: ✗ marks (issue) on runs and the chat.
  * 3: the production plan sent from the weekly stock analysis (plan), stock.json.
  * 4: encrypted files, logins (access.json), password records in the history, names skipped on stock texts.
+ * 5: roles (team.json): each person changes only what is theirs. Pages older than this must not save at all,
+ *    since they would let anyone change anything.
  */
-export const SCHEMA = 4;
+export const SCHEMA = 5;
 
 /** What is stored in data.json. */
 export interface DataDoc {

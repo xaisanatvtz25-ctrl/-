@@ -27,7 +27,9 @@ interface Props {
 export function Monthly({ ym, navigate, openEntry }: Props) {
     const { t, monthName, weekdays } = useI18n();
     const { products, months, deleteEntry } = useStore();
-    const { canEdit } = useEditor();
+    const { canEdit: unlocked, can, may } = useEditor();
+    const canEdit = can('record');
+    const mayRecord = may('record');
     const toast = useToast();
     const [showAll, setShowAll] = useState(false);
     const [expanded, setExpanded] = useState<string | null>(null);
@@ -187,10 +189,12 @@ export function Monthly({ ym, navigate, openEntry }: Props) {
                     </p>
                 </div>
                 <div className="hero-actions">
-                    <button type="button" className="btn btn-white" onClick={() => openEntry({ mode: 'add', month: ym })}>
-                        <Icon name={canEdit ? 'plus' : 'lock'} size={18} />
-                        {t('addProduction')}
-                    </button>
+                    {mayRecord && (
+                        <button type="button" className="btn btn-white" onClick={() => openEntry({ mode: 'add', month: ym })}>
+                            <Icon name={unlocked ? 'plus' : 'lock'} size={18} />
+                            {t('addProduction')}
+                        </button>
+                    )}
                     <button type="button" className="btn btn-glass" onClick={downloadPdf} disabled={pdfBusy || entries.length === 0}>
                         <Icon name="download" size={18} />
                         {pdfBusy ? t('generatingPdf') : t('downloadPdf')}
@@ -207,11 +211,13 @@ export function Monthly({ ym, navigate, openEntry }: Props) {
                         <Icon name="calendar" size={34} />
                     </div>
                     <h2>{t('noEntries')}</h2>
-                    <p>{t('noEntriesHint')}</p>
-                    <button type="button" className="btn btn-primary" onClick={() => openEntry({ mode: 'add', month: ym })}>
-                        <Icon name={canEdit ? 'plus' : 'lock'} size={18} />
-                        {t('addProduction')}
-                    </button>
+                    {mayRecord && <p>{t('noEntriesHint')}</p>}
+                    {mayRecord && (
+                        <button type="button" className="btn btn-primary" onClick={() => openEntry({ mode: 'add', month: ym })}>
+                            <Icon name={unlocked ? 'plus' : 'lock'} size={18} />
+                            {t('addProduction')}
+                        </button>
+                    )}
                 </section>
             ) : (
                 <section className="grid-2-1">

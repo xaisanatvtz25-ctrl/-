@@ -74,7 +74,9 @@ type Pending = { kind: 'accept' | 'cancel'; run: FoundRun; name: string } | { ki
 export function Chat({ open, run, navigate, openEntry, seen, markSeen }: Props) {
     const { t } = useI18n();
     const { products, months, chat, refresh, sendMessage, deleteMessage, setReceived, clearIssue, updateEntry } = useStore();
-    const { canEdit, requireLogin, name: me, token } = useEditor();
+    const { can, may, requireLogin, name: me, token } = useEditor();
+    const canEdit = can('chat');
+    const mayChat = may('chat');
     const toast = useToast();
     const [text, setText] = useState('');
     const [about, setAbout] = useState<ChatRef | null>(null);
@@ -218,6 +220,9 @@ export function Chat({ open, run, navigate, openEntry, seen, markSeen }: Props) 
     const focusInput = () => window.setTimeout(() => inputRef.current?.focus(), 30);
 
     const startReply = (m: ChatMsg) => {
+        if (!mayChat) {
+            return;
+        }
         requireLogin(() => {
             setReplyTo(m.kind && m.kind !== 'flag' ? null : m);
             setAbout(m.ref || null);
@@ -361,41 +366,49 @@ export function Chat({ open, run, navigate, openEntry, seen, markSeen }: Props) 
                 {m.text && <p className="cflag-reason">“{m.text}”</p>}
                 {isOpen && found && (
                     <div className="cflag-actions">
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => startReply(m)} disabled={busy}>
-                            <Icon name="reply" size={15} />
-                            {t('chatReply')}
-                        </button>
-                        {fixable && (
+                        {mayChat && (
+                            <button type="button" className="btn btn-primary btn-sm" onClick={() => startReply(m)} disabled={busy}>
+                                <Icon name="reply" size={15} />
+                                {t('chatReply')}
+                            </button>
+                        )}
+                        {fixable && may('record') && (
                             <button type="button" className="btn btn-outline btn-sm cflag-fix" onClick={() => fixTo(found, counted!)} disabled={busy}>
                                 <Icon name="pencil" size={15} />
                                 {t('issueFixTo', { n: fmt(counted!) })}
                             </button>
                         )}
-                        <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => openEntry({ mode: 'edit', month: found.month, entry: found.entry })}
-                            disabled={busy}
-                        >
-                            {t('issueEdit')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-success btn-sm cflag-accept"
-                            onClick={() => requireLogin(() => setPending({ kind: 'accept', run: found, name }))}
-                            disabled={busy}
-                        >
-                            {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name="check" size={15} stroke={2.6} />}
-                            {t('issueAccept')}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-ghost btn-sm cflag-cancel"
-                            onClick={() => requireLogin(() => setPending({ kind: 'cancel', run: found, name }))}
-                            disabled={busy}
-                        >
-                            {t('issueCancel')}
-                        </button>
+                        {may('record') && (
+                            <button
+                                type="button"
+                                className="btn btn-ghost btn-sm cflag-edit"
+                                onClick={() => openEntry({ mode: 'edit', month: found.month, entry: found.entry })}
+                                disabled={busy}
+                            >
+                                {t('issueEdit')}
+                            </button>
+                        )}
+                        {may('check') && (
+                            <button
+                                type="button"
+                                className="btn btn-success btn-sm cflag-accept"
+                                onClick={() => requireLogin(() => setPending({ kind: 'accept', run: found, name }))}
+                                disabled={busy}
+                            >
+                                {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name="check" size={15} stroke={2.6} />}
+                                {t('issueAccept')}
+                            </button>
+                        )}
+                        {may('check') && (
+                            <button
+                                type="button"
+                                className="btn btn-ghost btn-sm cflag-cancel"
+                                onClick={() => requireLogin(() => setPending({ kind: 'cancel', run: found, name }))}
+                                disabled={busy}
+                            >
+                                {t('issueCancel')}
+                            </button>
+                        )}
                     </div>
                 )}
             </article>
@@ -464,7 +477,7 @@ export function Chat({ open, run, navigate, openEntry, seen, markSeen }: Props) 
                     </div>
                     <div className="cmsg-tools">
                         <span className="cmsg-time num">{clock(m.at)}</span>
-                        {!mine && (
+                        {!mine && mayChat && (
                             <button type="button" className="link-btn" onClick={() => startReply(m)}>
                                 {t('chatReply')}
                             </button>
@@ -551,7 +564,12 @@ export function Chat({ open, run, navigate, openEntry, seen, markSeen }: Props) 
                             </button>
                         </div>
                     )}
-                    {canEdit ? (
+                    {!mayChat ? (
+                        <p className="hint chat-view-only">
+                            <Icon name="eye" size={16} />
+                            {t('chatViewOnly')}
+                        </p>
+                    ) : canEdit ? (
                         <div className="chat-compose-row">
                             <textarea
                                 ref={inputRef}

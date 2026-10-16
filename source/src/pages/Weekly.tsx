@@ -69,7 +69,8 @@ const GROUP_TONE: Record<Group, string> = { urgent: 'is-urgent', next: 'is-next'
 export function Weekly({ openEntry }: { openEntry: (s: EntryModalState) => void }) {
     const { t } = useI18n();
     const { products, months, plan, sendPlan, setPlanDone } = useStore();
-    const { canEdit, requireLogin, token, name: me } = useEditor();
+    const { can, may, requireLogin, token, name: me } = useEditor();
+    const canEdit = can('record');
     const toast = useToast();
     const today = todayIso();
 
@@ -338,6 +339,10 @@ export function Weekly({ openEntry }: { openEntry: (s: EntryModalState) => void 
     };
 
     const askSend = () => {
+        if (!may('plan')) {
+            toast.show(t('errNotAllowed'), 'error', 'lock');
+            return;
+        }
         requireLogin(() => {
             if (draft && unanswered > 0) {
                 toast.show(t('wkAnswerMissing'), 'error');
@@ -349,6 +354,9 @@ export function Weekly({ openEntry }: { openEntry: (s: EntryModalState) => void 
 
     const doSend = async () => {
         const items = choice.filter((c) => c.qty > 0);
+        if (!may('plan')) {
+            return;
+        }
         try {
             if (draft) {
                 const week: Week = {
@@ -1067,10 +1075,14 @@ export function Weekly({ openEntry }: { openEntry: (s: EntryModalState) => void 
                     </div>
                     <div className="wk-plan-foot">
                         <span className="wk-plan-total num">{t('wkPlanTotal', { n: choice.filter((c) => c.qty > 0).length, qty: fmt(choiceTotal) })}</span>
-                        <button type="button" className="btn btn-primary wk-send" onClick={askSend} disabled={!draft && !choice.some((c) => c.qty > 0)}>
-                            <Icon name="send" size={18} />
-                            {choice.some((c) => c.qty > 0) || !draft ? t('wkSend') : t('wkSaveOnly')}
-                        </button>
+                        {may('plan') ? (
+                            <button type="button" className="btn btn-primary wk-send" onClick={askSend} disabled={!draft && !choice.some((c) => c.qty > 0)}>
+                                <Icon name="send" size={18} />
+                                {choice.some((c) => c.qty > 0) || !draft ? t('wkSend') : t('wkSaveOnly')}
+                            </button>
+                        ) : (
+                            <span className="hint wk-send-none">{t('wkSendProduction')}</span>
+                        )}
                     </div>
                 </section>
             )}

@@ -7499,3 +7499,69 @@ a.chip {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* ---------- roles: who does what ---------- */
+.side-user-text small.side-user-role {
+    color: #9fd6f5;
+    font-weight: 600;
+}
+
+.side-user-text small.side-user-role.is-warehouse {
+    color: #f7c46c;
+}
+
+.side-user-text small.side-user-role.is-viewer {
+    color: rgba(219, 234, 246, 0.7);
+    font-weight: 500;
+}
+
+.account-role {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--sky-50);
+    box-shadow: inset 0 0 0 1px var(--sky-200);
+}
+
+.account-role.is-warehouse {
+    background: var(--gold-bg);
+    box-shadow: inset 0 0 0 1px rgba(242, 169, 59, 0.35);
+}
+
+.account-role.is-viewer {
+    background: #f6f9fc;
+    box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.account-role-label {
+    font-size: 15px;
+}
+
+.account-role-duty {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.chat-view-only {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: #f6f9fc;
+    text-align: center;
+}
+
+.chat-view-only .icon {
+    flex: none;
+}
+
+.wk-send-none {
+    margin: 0;
+    text-align: right;
+}

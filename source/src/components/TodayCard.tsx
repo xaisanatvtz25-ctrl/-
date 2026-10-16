@@ -16,7 +16,8 @@ const PLAN_SHOWN = 6;
 export function TodayCard({ openEntry }: { openEntry: (state: EntryModalState) => void }) {
     const { t } = useI18n();
     const { products, months, plan } = useStore();
-    const { canEdit } = useEditor();
+    const { can } = useEditor();
+    const canEdit = can('record');
     const today = todayIso();
     const list = useMemo(() => suggestToday(products, months, today), [products, months, today]);
 

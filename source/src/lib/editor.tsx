@@ -6,13 +6,16 @@ import { makeEditorDoc, openEditKey, readEditorDoc, writeEditorDoc } from './key
 import { useSession } from './session';
 import { LOCAL, activeVault, getLocal, onLocalChange, setLocal } from './vault';
 import { VaultError, openMaster } from './vaultCore';
+import { may as roleMay, writes } from './roles';
+import type { Duty, Role } from './roles';
 import { AccountModal, UnlockModal } from '../components/EditAccess';
 import type { UnlockReason } from '../components/EditAccess';
 
 /**
  * Editing. Everyone logged in can look; adding and changing data needs the edit password as well. It opens the
  * GitHub key kept (encrypted) in the repository, so it works on any device. Everything saved carries the name of
- * the person logged in.
+ * the person logged in. What each person may change depends on their role (roles.ts): the buttons for the rest
+ * are not shown, and saving refuses them.
  */
 
 const KEEP_MS = 30 * 24 * 3600 * 1000;
@@ -41,6 +44,12 @@ interface EditorValue {
     token: string;
     /** the person logged in (saved with every change) */
     name: string;
+    /** what this person does */
+    role: Role;
+    /** the role includes this duty (its buttons show; locked, they ask for the edit password) */
+    may: (duty: Duty) => boolean;
+    /** the role includes this duty and editing is unlocked */
+    can: (duty: Duty) => boolean;
     /** run `then` now if editing is open, otherwise after unlocking */
     requireLogin: (then?: () => void) => void;
     openAccount: () => void;
@@ -147,9 +156,21 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
     const openAccount = useCallback(() => setAccountOpen(true), []);
 
+    const role = session.role;
     const value = useMemo<EditorValue>(
-        () => ({ canEdit, token, name: session.name, requireLogin, openAccount, logout, keyRejected }),
-        [canEdit, token, session.name, requireLogin, openAccount, logout, keyRejected],
+        () => ({
+            canEdit,
+            token,
+            name: session.name,
+            role,
+            may: (duty: Duty) => roleMay(role, duty),
+            can: (duty: Duty) => canEdit && roleMay(role, duty),
+            requireLogin,
+            openAccount,
+            logout,
+            keyRejected,
+        }),
+        [canEdit, token, session.name, role, requireLogin, openAccount, logout, keyRejected],
     );
 
     const close = useCallback(() => setRequest(null), []);
@@ -169,6 +190,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
                 open={accountOpen}
                 name={session.name}
                 until={session.until}
+                role={role}
+                writes={writes(role)}
                 canEdit={canEdit}
                 onUnlock={() => {
                     setAccountOpen(false);

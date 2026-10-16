@@ -193,6 +193,8 @@ export const LOCAL = {
     aliases: 'milako.v2.stockAliases',
     ai: 'milako.v2.ai',
     editKey: 'milako.v2.editKey',
+    /** the roles (team.json) as last read, so the page knows who does what before GitHub answers */
+    team: 'milako.v2.team',
 } as const;
 
 export type LocalName = (typeof LOCAL)[keyof typeof LOCAL];

@@ -25,7 +25,8 @@ interface Props {
 export function Products({ year, setYear, openEntry, openProduct }: Props) {
     const { t, monthName } = useI18n();
     const { products, months, deleteProduct } = useStore();
-    const { canEdit } = useEditor();
+    const { canEdit: unlocked, can, may } = useEditor();
+    const canEdit = can('products');
     const toast = useToast();
     const [query, setQuery] = useState('');
     const [sort, setSort] = useState<'order' | 'total'>('order');
@@ -81,10 +82,12 @@ export function Products({ year, setYear, openEntry, openProduct }: Props) {
                 actions={
                     <>
                         <YearSwitch year={year} onChange={setYear} />
-                        <button type="button" className="btn btn-primary" onClick={() => openProduct({ mode: 'add' })}>
-                            <Icon name={canEdit ? 'plus' : 'lock'} size={18} />
-                            {t('addProduct')}
-                        </button>
+                        {may('products') && (
+                            <button type="button" className="btn btn-primary" onClick={() => openProduct({ mode: 'add' })}>
+                                <Icon name={unlocked ? 'plus' : 'lock'} size={18} />
+                                {t('addProduct')}
+                            </button>
+                        )}
                     </>
                 }
             />

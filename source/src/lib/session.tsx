@@ -5,7 +5,9 @@ import { HISTORY_FILE } from './config';
 import { readFile, readRaw, writeFile } from './github';
 import { readEditorDoc } from './keys';
 import { normalizeHistory, serializeHistory } from './history';
-import { COMMIT_MESSAGE, readSecure, writeSecure } from './secureFiles';
+import { COMMIT_MESSAGE, readSecure, readSecureText, writeSecure } from './secureFiles';
+import { TEAM_FILE, may as roleMay, parseTeam, roleOf, serializeTeam } from './roles';
+import type { Duty, Role, TeamDoc } from './roles';
 import {
     ACCESS_FILE,
     VaultError,
@@ -24,6 +26,7 @@ import {
     clearSession,
     closeLocal,
     flushLocal,
+    getLocal,
     initLocal,
     loadSession,
     loginWait,
@@ -50,6 +53,9 @@ export interface Person {
     initial: boolean;
 }
 
+/** a duty this login may not do (its role does not include it) */
+export const NOT_ALLOWED = 'not_allowed';
+
 export type LogoutReason = 'manual' | 'changed' | 'expired' | 'removed';
 
 interface SessionValue {
@@ -57,6 +63,10 @@ interface SessionValue {
     name: string;
     /** everyone who can log in (for setting someone's forgotten password) */
     people: Person[];
+    /** what this person does (team.json); 'viewer' until the list is read */
+    role: Role;
+    /** the role includes this duty */
+    may: (duty: Duty) => boolean;
     /** this login lasts until (ms) */
     until: number;
     logout: (reason?: LogoutReason) => Promise<void>;
@@ -120,6 +130,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const [access, setAccess] = useState<AccessDoc | null>(null);
     const [accessError, setAccessError] = useState<string | null>(null);
     const [changeOpen, setChangeOpen] = useState(false);
+    const [team, setTeam] = useState<TeamDoc | null>(null);
+    const teamRef = useRef(team);
+    teamRef.current = team;
     const [notice, setNotice] = useState<LogoutReason | null>(() => {
         try {
             const r = sessionStorage.getItem(REASON_KEY) as LogoutReason | null;
@@ -141,6 +154,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         } catch (e) {
             setAccessError(e instanceof VaultError || e instanceof ApiError ? e.code : 'network_error');
             return null;
+        }
+    }, []);
+
+    /** the roles: the copy kept on this device at once, then the one on GitHub */
+    const loadTeam = useCallback(async () => {
+        try {
+            const text = await readSecureText(TEAM_FILE);
+            const doc = parseTeam(text || '{}');
+            setTeam(doc);
+            setLocal(LOCAL.team, serializeTeam(doc));
+        } catch {
+            // cannot read it now (offline): the copy kept on this device stays
         }
     }, []);
 
@@ -167,8 +192,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const enter = useCallback(async (s: StoredSession, firstCode?: string) => {
         setActiveVault({ key: s.key, kid: s.kid, userId: s.userId, name: s.name });
         await initLocal(s.key);
+        const kept = getLocal(LOCAL.team);
+        setTeam(kept ? parseTeam(kept) : null);
         setPhase(firstCode ? { at: 'first', session: s, code: firstCode } : { at: 'ready', session: s });
-    }, []);
+        void loadTeam();
+    }, [loadTeam]);
 
     /** the person's password changed elsewhere, or the person was removed: this device logs out */
     const check = useCallback(async () => {
@@ -176,6 +204,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (p.at !== 'ready') {
             return;
         }
+        void loadTeam(); // roles changed on GitHub show without logging in again
         const acc = await loadAccess();
         if (!acc) {
             return; // cannot tell (offline): stays logged in
@@ -189,7 +218,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         } else if (Date.now() > saved.exp) {
             void logout('expired');
         }
-    }, [loadAccess, logout]);
+    }, [loadAccess, loadTeam, logout]);
 
     // the login kept on this device
     useEffect(() => {
@@ -283,6 +312,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 throw new VaultError('locked');
             }
             const me = p.session;
+            if (targetId !== me.userId && !roleMay(roleOf(teamRef.current, me.userId), 'reset')) {
+                throw new VaultError(NOT_ALLOWED); // only production sets a new password for someone else
+            }
             const doc = await readEditorDoc();
             if (!doc) {
                 throw new VaultError('no_master');
@@ -334,6 +366,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     );
 
     const session = phase.at === 'ready' || phase.at === 'first' ? phase.session : null;
+    const role: Role = session ? roleOf(team, session.userId) : 'viewer';
     const value = useMemo<SessionValue | null>(
         () =>
             session
@@ -341,13 +374,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                       userId: session.userId,
                       name: session.name,
                       people: peopleOf(access).length ? peopleOf(access) : [{ id: session.userId, name: session.name, initial: false }],
+                      role,
+                      may: (duty: Duty) => roleMay(role, duty),
                       until: session.exp,
                       logout,
                       openChangePassword: () => setChangeOpen(true),
                       recheck: check,
                   }
                 : null,
-        [session, access, logout, check],
+        [session, access, role, logout, check],
     );
 
     if (phase.at === 'boot') {
@@ -384,7 +419,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             <ChangePasswordModal
                 open={changeOpen}
                 me={value.userId}
-                people={value.people}
+                people={value.may('reset') ? value.people : value.people.filter((x) => x.id === value.userId)}
                 onSave={async (targetId, code, next) => {
                     await setPassword(targetId, code, next);
                 }}

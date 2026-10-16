@@ -24,7 +24,9 @@ import type { DataDoc, Dataset, DataSource } from './source';
 import { applyOps, entrySnap, normalizeHistory, serializeHistory, snapToEntry } from './history';
 import type { EntrySnap, HistOp, HistRecord, HistoryDoc, LogDraft } from './history';
 import { useEditor } from './editor';
-import { useSession } from './session';
+import { NOT_ALLOWED, useSession } from './session';
+import { dutyOfRecord } from './roles';
+import type { Duty } from './roles';
 import { announceOutdated } from './update';
 import type { ChatMsg, ChatRef, Entry, EntryInput, MonthMap, PlanItem, Product } from './types';
 
@@ -491,10 +493,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     /* ---------- saving ---------- */
 
-    /** Applies `change` to the newest data and saves it (retries if someone saved in between). */
+    /**
+     * Applies `change` to the newest data and saves it (retries if someone saved in between). Only for a person
+     * whose role includes `duty`.
+     */
     const commit = useCallback(
-        async <R,>(change: (doc: DataDoc, who: string, now: number) => Change<R>): Promise<R> => {
+        async <R,>(duty: Duty, change: (doc: DataDoc, who: string, now: number) => Change<R>): Promise<R> => {
             const ed = editorRef.current;
+            if (!ed.may(duty)) {
+                throw new ApiError(NOT_ALLOWED, 403);
+            }
             if (!ed.token || !ed.name) {
                 ed.requireLogin(); // asks for the password, or just the name
                 throw new ApiError('unauthorized', 401);
@@ -569,7 +577,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const addEntry = useCallback(
         (input: EntryInput) =>
-            commit((doc, who, now) => {
+            commit('record', (doc, who, now) => {
                 const v = checkEntry(doc, input);
                 const entry: Entry = { id: newId('e'), productId: v.product.id, qty: v.qty, date: v.date, note: v.note, createdAt: now, by: who };
                 doc.months[v.month] = [...(doc.months[v.month] || []), entry];
@@ -588,7 +596,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const updateEntry = useCallback(
         (id: string, fromMonth: string, input: EntryInput) =>
-            commit((doc, who, now) => {
+            commit('record', (doc, who, now) => {
                 const at = findEntry(doc, id, fromMonth);
                 if (!at) {
                     throw new ApiError('not_found', 404);
@@ -622,7 +630,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const deleteEntry = useCallback(
         async (id: string, month: string) => {
-            await commit((doc, who, now) => {
+            await commit('record', (doc, who, now) => {
                 const at = findEntry(doc, id, month);
                 if (!at) {
                     throw new ApiError('not_found', 404);
@@ -646,7 +654,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const addProduct = useCallback(
         (name: string, since?: string) =>
-            commit((doc, _who, now) => {
+            commit('products', (doc, _who, now) => {
                 const clean = cleanName(name);
                 if (!clean) {
                     throw new ApiError('name_required', 400);
@@ -664,7 +672,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const renameProduct = useCallback(
         (id: string, name: string) =>
-            commit((doc) => {
+            commit('products', (doc) => {
                 const clean = cleanName(name);
                 if (!clean) {
                     throw new ApiError('name_required', 400);
@@ -685,7 +693,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const deleteProduct = useCallback(
         async (id: string) => {
-            await commit((doc) => {
+            await commit('products', (doc) => {
                 const index = doc.products.findIndex((p) => p.id === id);
                 if (index < 0) {
                     throw new ApiError('not_found', 404);
@@ -703,7 +711,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const setReceived = useCallback(
         (items: RunRef[], received: boolean) => {
-            return commit((doc, who, now) => {
+            return commit('check', (doc, who, now) => {
                 const logs: LogDraft[] = [];
                 for (const item of items) {
                     const at = findEntry(doc, item.id, item.month);
@@ -738,7 +746,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const flagIssue = useCallback(
         async (item: RunRef, counted: number | undefined, reason: string) => {
-            await commit((doc, who, now) => {
+            await commit('check', (doc, who, now) => {
                 const why = cleanText(reason, REASON_MAX);
                 if (!why) {
                     throw new ApiError('reason_required', 400);
@@ -770,7 +778,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const clearIssue = useCallback(
         async (item: RunRef) => {
-            await commit((doc, who, now) => {
+            await commit('check', (doc, who, now) => {
                 const at = findEntry(doc, item.id, item.month);
                 if (!at) {
                     throw new ApiError('not_found', 404);
@@ -793,7 +801,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const sendMessage = useCallback(
         (text: string, ref?: ChatRef | null, replyTo?: string | null) =>
-            commit((doc, who, now) => {
+            commit('chat', (doc, who, now) => {
                 const clean = cleanText(text, CHAT_TEXT_MAX);
                 if (!clean) {
                     throw new ApiError('text_required', 400);
@@ -815,7 +823,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const sendPlan = useCallback(
         async (week: string, items: Array<{ productId: string; qty: number; date: string }>) => {
-            await commit((doc, who, now) => {
+            await commit('plan', (doc, who, now) => {
                 const list: PlanItem[] = [];
                 items.forEach((it, i) => {
                     if (!doc.products.some((p) => p.id === it.productId)) {
@@ -836,7 +844,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const setPlanDone = useCallback(
         async (id: string, done: boolean) => {
-            await commit((doc, who, now) => {
+            await commit('record', (doc, who, now) => {
                 const item = doc.plan.find((x) => x.id === id);
                 if (!item) {
                     throw new ApiError('not_found', 404);
@@ -857,7 +865,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const deleteMessage = useCallback(
         async (id: string) => {
-            await commit((doc, who) => {
+            await commit('chat', (doc, who) => {
                 const index = doc.chat.findIndex((m) => m.id === id);
                 if (index < 0) {
                     return { result: undefined, noop: true };
@@ -880,10 +888,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             if (!r) {
                 throw new ApiError('not_found', 404);
             }
-            if (r.undoneAt || r.act === 'undo' || r.act === 'password') {
+            const duty = dutyOfRecord(r);
+            if (r.undoneAt || !duty) {
                 throw new ApiError('already_undone', 409);
             }
-            await commit((doc, who, now) => ({
+            await commit(duty, (doc, who, now) => ({
                 result: undefined,
                 log: { ...inverse(doc, r, who, now), act: 'undo', undoOf: r.id },
                 mark: r.id,

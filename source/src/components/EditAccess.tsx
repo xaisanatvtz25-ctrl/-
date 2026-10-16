@@ -8,6 +8,7 @@ import type { Key } from '../lib/i18n';
 import { errorCode } from '../lib/api';
 import { TOKEN_URL } from '../lib/config';
 import { longDate } from '../lib/format';
+import type { Role } from '../lib/roles';
 
 /** i18n key for an error from saving, loading or unlocking */
 export function apiErrorKey(e: unknown): Key {
@@ -35,10 +36,15 @@ export function apiErrorKey(e: unknown): Key {
     if (code === 'reason_required') return 'issueReasonRequired';
     if (code === 'text_required') return 'chatTextRequired';
     if (code === 'not_yours') return 'chatNotYours';
+    if (code === 'not_allowed') return 'errNotAllowed';
     if (code === 'outdated') return 'errOutdated';
     if (code === 'date_invalid' || code === 'month_required') return 'errorGeneric';
     return 'errorGeneric';
 }
+
+/** the name of each role, and what it does */
+export const ROLE_LABEL: Record<Role, Key> = { production: 'roleProduction', warehouse: 'roleWarehouse', viewer: 'roleViewer' };
+export const ROLE_DUTY: Record<Role, Key> = { production: 'roleDutyProduction', warehouse: 'roleDutyWarehouse', viewer: 'roleDutyViewer' };
 
 export type UnlockReason = 'expired' | 'rejected';
 
@@ -315,6 +321,10 @@ interface AccountProps {
     name: string;
     /** the login on this device lasts until (ms) */
     until: number;
+    /** what this person does */
+    role: Role;
+    /** the role changes something (else there is nothing to unlock) */
+    writes: boolean;
     canEdit: boolean;
     onUnlock: () => void;
     onLock: () => void;
@@ -324,7 +334,7 @@ interface AccountProps {
 }
 
 /** The person logged in: editing on or off, change the password, log out. */
-export function AccountModal({ open, name, until, canEdit, onUnlock, onLock, onChangePassword, onLogout, onClose }: AccountProps) {
+export function AccountModal({ open, name, until, role, writes, canEdit, onUnlock, onLock, onChangePassword, onLogout, onClose }: AccountProps) {
     const { t } = useI18n();
     const toast = useToast();
     const day = new Date(until);
@@ -341,7 +351,13 @@ export function AccountModal({ open, name, until, canEdit, onUnlock, onLock, onC
                     <p className="hint">{t('acLoggedIn', { date: longDate(untilIso) })}</p>
                 </div>
             </div>
-            <div className={`account-edit${canEdit ? ' is-on' : ''}`}>
+            <div className={`account-role is-${role}`}>
+                <span className="account-role-label">
+                    {t('acRole')}: <strong>{t(ROLE_LABEL[role])}</strong>
+                </span>
+                <span className="account-role-duty">{t(ROLE_DUTY[role])}</span>
+            </div>
+            {writes && <div className={`account-edit${canEdit ? ' is-on' : ''}`}>
                 <span className="account-edit-icon" aria-hidden="true">
                     <Icon name={canEdit ? 'pencil' : 'lock'} size={18} />
                 </span>
@@ -362,7 +378,7 @@ export function AccountModal({ open, name, until, canEdit, onUnlock, onLock, onC
                         {t('acUnlock')}
                     </button>
                 )}
-            </div>
+            </div>}
             <div className="account-actions">
                 <button type="button" className="btn btn-outline account-change" onClick={onChangePassword}>
                     <Icon name="key" size={17} />

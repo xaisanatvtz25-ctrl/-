@@ -8,6 +8,8 @@
 - `history.json` — who added, changed or deleted what and when (the History page, with undo), and who set whose password.
 - `stock.json` — the stock analyses of the page "ວັນນີ້ຄວນຜະລິດຫຍັງດີ" (created with the first one).
 - `editor.json` — the GitHub key for saving, locked again with the edit password and with the company code.
+- `team.json` — who does what: production (records and corrects the runs sent to the warehouse, the products, the plan), warehouse (✓ received / ✗ does not match), or viewer (summaries, PDF files and the AI only). Someone not listed only looks. Set by the website's administrator (`tools/vault-cli.ts team`).
 
 All of these except `access.json` are encrypted with the data key (AES-256-GCM): `{"milako": "vault", "kid", "iv", "ct"}`.
-Commit messages say nothing about the data. Do not edit these files by hand: everything is changed from the website.
+Commit messages say nothing about the data. Do not edit these files by hand: everything is changed from the website
+(or with `tools/vault-cli.ts`, which uses the website's own code).

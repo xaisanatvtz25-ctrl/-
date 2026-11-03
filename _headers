@@ -1,0 +1,13 @@
+# Security headers, sent by Cloudflare Pages with every page and file (GitHub Pages cannot send them).
+# The Content-Security-Policy matches the one in index.template.html, plus what only a header can do
+# (frame-ancestors). The relays in connect-src are PRESENCE_RELAYS in src/lib/config.ts: change them together.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com wss://relay.damus.io wss://nos.lol wss://relay.primal.net wss://offchain.pub; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), midi=(), magnetometer=(), gyroscope=(), accelerometer=(), display-capture=(), browsing-topics=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-Robots-Tag: noindex, nofollow, noarchive
